@@ -1,13 +1,15 @@
 #!/bin/bash
-#PBS -l ncpus=896
+#PBS -l ncpus=64
 #PBS -q normal
-#PBS -l mem=1792GB
-#PBS -l walltime=00:03:00
-#PBS -N FTOnlySGCT
+#PBS -l mem=128GB
+#PBS -l walltime=00:18:00
+#PBS -N SGField
 #PBS -M mohsin.ali@anu.edu.au
 
-# best run: ncpus 112, mem 224GB, walltime 00:08:00, for 3d with 8 8 8 grid level 4
-
+# best ncpus 64, mem 64GB, walltime 00:01:00 for 9 9 of 2d level 4
+# best ncpus 64, mem 128GB, walltime 00:09:00 for 10 10 of 2d level 4
+# best ncpus64, mem 128GB, walltime 00:08:00 for 11 11 of 2d level 5
+# best ncpus 784, mem 1568GB, walltime 00:02:00 for 10 10 of 2d level 4
 # http://nf.nci.org.au/training/NF_IntroCourse.new/slides/allslides.html
 # http://nf.nci.org.au/training/NF_IntroCourse.new/
 # http://torusware.com/extfiles/doc/fastmpj-documentation/userguide/UsersGuide.pdf
@@ -35,7 +37,10 @@
 
 # Load modules
 #module purge
-#module load openmpi
+module load openmpi/1.4.3
+module load gcc/4.6.4
+module load python/2.7.11
+module load python/2.7.11-matplotlib
 #module list
 
 # Execution info
@@ -78,10 +83,10 @@ cd $PBS_O_WORKDIR
 # Some settings
 # For 2D: -NX 2^X_DIM, -NY 2^Y_DIM
 # For 3D: -NX 2^X_DIM, -NY 2^Y_DIM, -NZ 2^Z_DIM
-X_DIM=8
-Y_DIM=8
-Z_DIM=8
-LEVEL=4
+X_DIM=11
+Y_DIM=11
+Z_DIM=0
+LEVEL=5
 
 # Open MPI requires a hostfile
 HOST_FILE=hostfile
@@ -110,7 +115,7 @@ trap "rm -f $HOST_FILE" EXIT
 #echo "Setting environment from \"set_environment.raijin_cluster.non_ft_gfortran.sh\"";\
 #source set_environment.raijin_cluster.non_ft_gfortran.sh;\
 #echo "Calling make allclean; make";\
-#make allclean;\
+make clean;\
 make;\
 pwd)
 
@@ -120,7 +125,10 @@ pwd)
 
 # Execute MPI code
 # For fixed-time steps
-./run3dAdvectRaijin -v 0 -p 64 -q 32 -r 16 -l ${LEVEL} ${X_DIM} ${Y_DIM} ${Z_DIM} # for 3D
+#./run3dAdvectRaijin -v 1 -2 -p 128 -q 64 -r 32 -l ${LEVEL} ${X_DIM} ${Y_DIM} ${Z_DIM} # for 2D for 784 level 4
+./run3dAdvectRaijin -v 1 -2 -C 4 -F -p 8 -q 4 -r 2 -l ${LEVEL} ${X_DIM} ${Y_DIM} ${Z_DIM} # for 2D for 49 level 4, 64 level 5
+
+#qstat -f $PBS_JOBID | grep used
 
 # Unset flags
 module purge
